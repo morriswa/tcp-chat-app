@@ -1,0 +1,10 @@
+### py venv ###
+bin
+lib
+include
+pyvenv.cfg
+
+### ide ###
+.idea
+.vscode
+
