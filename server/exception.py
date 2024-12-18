@@ -5,5 +5,6 @@ class BadRequestException(Exception):
 
     def response(self):
         return {
+            "status": "error",
             "msg": self.message,
         }
