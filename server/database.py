@@ -6,35 +6,35 @@ from typing import Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-log = logging.getLogger(__name__)
+import context
 
-db_connection: Any = None
+log = logging.getLogger(__name__)
 
 
 class init_db:
     def __enter__(self):
         """ initializes application db context """
-        global db_connection
-        if db_connection is not None:
+        conn = context.get_db_connection()
+        if conn is not None:
             raise RuntimeError("database connection ALREADY been initialized")
-        db_connection = psycopg2.connect(
+        context.set_db_connection(psycopg2.connect(
             host=os.getenv("DB_HOST"),
             dbname=os.environ.get("DB_NAME"),
             port=os.getenv("DB_PORT"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
-        )
+        ))
         log.debug('opened connection to db')
-        return db_connection
+        return context.get_db_connection()
 
     def __exit__(self, exc_type, exc_value, traceback):
         """ destroys application db context """
-        global db_connection
+        conn = context.get_db_connection()
+        if conn is not None:
+            conn.close()
+        context.set_db_connection(None)
 
-        db_connection.close()
-        db_connection = None
-
-        if exc_type is not None:
+        if exc_type is not None and not isinstance(exc_value, SystemExit):
             log.debug('closed connection to db with errors')
         else:
             log.debug('closed connection to db')
@@ -47,24 +47,24 @@ class cursor:
 
     def __enter__(self):
         """ MUST be run within database context """
-        global db_connection
-        if db_connection is None:
+        conn = context.get_db_connection()
+        if conn is None:
             raise RuntimeError("database connection has not been initialized")
-        self.__cursor = db_connection.cursor(cursor_factory=RealDictCursor)
+        self.__cursor = conn.cursor(cursor_factory=RealDictCursor)
         log.debug('begin transaction')
         return self.__cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
-        global db_connection
-        if db_connection is None:
+        conn = context.get_db_connection()
+        if conn is None:
             raise RuntimeError("database connection has not been initialized")
 
         if exc_type is not None:
             log.error('encountered error while committing transaction', exc_info=exc_value)
-            db_connection.rollback()
+            conn.rollback()
             log.debug('transaction rollback complete')
         else:
-            db_connection.commit()
+            conn.commit()
             log.debug('transaction committed')
 
         self.__cursor = None
