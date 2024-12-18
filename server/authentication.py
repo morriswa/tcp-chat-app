@@ -1,17 +1,23 @@
 
 import base64
 
+import daos
+from exception import BadRequestException
+
 
 def authenticate(request):
-    auth_header = request.get('authentication')
-    if auth_header is None:
-        raise Exception('authentication is missing')
+    auth = request.get('authentication')
+    if auth is None:
+        raise BadRequestException('authentication field is missing')
 
-    if not auth_header.startswith('Basic '):
-        raise ValueError('Invalid Basic Authentication header')
+    if not auth.startswith('Basic '):
+        raise BadRequestException('Invalid Basic Authentication field')
 
-    encoded_credentials = auth_header[6:]  # Remove 'Basic ' prefix
+    encoded_credentials = auth[6:]  # Remove 'Basic ' prefix
     decoded_credentials = base64.b64decode(encoded_credentials).decode('utf-8')
 
-    username, password = decoded_credentials.split(':', 1)
-    return username, password
+    username, provided_password = decoded_credentials.split(':', 1)
+
+    daos.login(username, provided_password)
+
+    return username

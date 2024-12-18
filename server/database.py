@@ -63,19 +63,28 @@ class cursor:
             log.error('encountered error while committing transaction', exc_info=exc_value)
             conn.rollback()
             log.debug('transaction rollback complete')
+            self.__cursor = None
+            return False
         else:
             conn.commit()
             log.debug('transaction committed')
-
-        self.__cursor = None
-        return True
+            self.__cursor = None
+            return True
 
 
 def init_db_tables():
     with cursor() as cur:
         cur.execute("""
-            create table if not exists username_password (
+            create table if not exists user_info (
                 username varchar(256) primary key,
-                password varchar(256) not null
+                password varchar(256) not null,
+                last_login timestamp not null default current_timestamp
+            );
+            
+            create table if not exists user_chat_logs (
+                chat_id bigint primary key,
+                user_one varchar(256) not null,
+                user_two varchar(256) not null,
+                chat_log varchar(100000)
             );
         """)

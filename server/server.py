@@ -6,6 +6,7 @@ import json
 import context
 import authentication
 import views
+from exception import BadRequestException, ServerException
 
 PORT = 5678
 
@@ -19,11 +20,20 @@ def process_request(request):
                 auth = authentication.authenticate(request)
                 return views.hello_world(request.get("body"), auth)
             case "create_account":
-                return views.create_account(request)
+                return views.create_account(request.get("body"))
+            case "retrieve_chats":
+                pass
+            case "view_chat":
+                pass
+            case "send_message":
+                pass
+            case "online_users":
+                auth = authentication.authenticate(request)
+                return views.online_users(request.get("body"), auth)
             case _:
-                raise Exception("Invalid request action")
-    except Exception as e:
-        return views.error(e)
+                raise BadRequestException("Invalid request action")
+    except ServerException as e:
+        return e.response()
 
 
 def stop_tcp_server():
@@ -39,11 +49,11 @@ def start_tcp_server():
     # create socket and bind to requested port
     # https://docs.python.org/3/howto/sockets.html
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # try:
+
+    # https://stackoverflow.com/questions/5875177/how-to-close-a-socket-left-open-by-a-killed-program
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
     server_socket.bind(('0.0.0.0', PORT))
-    # except OSError as exc:
-    #     if exc.errno == 48:
-    #         server_socket.close()
 
     context.set_socket(server_socket)
 
@@ -60,10 +70,9 @@ def start_tcp_server():
         data = client_socket.recv(1024)  # Adjust buffer size as needed
 
         decoded_data = json.loads(data.decode("utf-8"))
+        response_data = process_request(decoded_data)
+        response = json.dumps(response_data)
 
-        response = json.dumps(process_request(decoded_data))
-
-        # encode time string, send response, and close connection
         client_socket.sendall(response.encode())
         client_socket.close()
         log.info(f'closed connection to {client_address[0]}:{client_address[1]}\n')

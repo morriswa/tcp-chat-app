@@ -3,7 +3,7 @@ import base64
 import json
 import socket
 
-SERVER_IP = "localhost"
+SERVER_IP = "0.0.0.0"
 SERVER_PORT = 5678
 
 
@@ -36,4 +36,15 @@ if __name__ == "__main__":
         "authentication": f"Basic {encoded_credentials.decode()}",
         "action": "health",
     }
+    request = {
+        "authentication": f"Basic {encoded_credentials.decode()}",
+        "action": "online_users",
+    }
+    # request = {
+    #     "action": "create_account",
+    #     "body": {
+    #         "username": username,
+    #         "password": password
+    #     }
+    # }
     send_tcp_request(json.dumps(request))
