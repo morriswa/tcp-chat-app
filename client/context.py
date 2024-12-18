@@ -1,3 +1,4 @@
+
 from typing import Any
 
 __token: str | None = None
@@ -30,7 +31,7 @@ def set_window(w):
     __window = w
 
 
-def add_frame(name, frame):
+def set_frame(name, frame):
     global __window
     __frames[name] = frame
 
