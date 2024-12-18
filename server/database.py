@@ -72,7 +72,7 @@ class cursor:
             return True
 
 
-def init_db_tables():
+def create_tables():
     with cursor() as cur:
         cur.execute("""
             create table if not exists user_info (

@@ -3,11 +3,12 @@ import base64
 import json
 import logging
 import socket
+import os
 
 import context
 
-SERVER_IP = "0.0.0.0"
-SERVER_PORT = 5678
+SERVER_IP = os.getenv('SERVER_HOST', '0.0.0.0')
+SERVER_PORT = os.getenv('SERVER_PORT', '5678')
 
 log = logging.getLogger(__name__)
 

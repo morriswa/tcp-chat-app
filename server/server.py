@@ -2,13 +2,14 @@
 import socket
 import logging
 import json
+import os
 
 import context
 import authentication
 import views
 from exception import BadRequestException
 
-PORT = 5678
+TCP_PORT = int(os.getenv('TCP_PORT', 5678))
 
 log = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ def stop_tcp_server():
 
 
 def start_tcp_server():
+    """ starts a TCP server on requested post"""
 
     # create socket and bind to requested port
     # https://docs.python.org/3/howto/sockets.html
@@ -58,13 +60,13 @@ def start_tcp_server():
     # https://stackoverflow.com/questions/5875177/how-to-close-a-socket-left-open-by-a-killed-program
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    server_socket.bind(('0.0.0.0', PORT))
+    server_socket.bind(('0.0.0.0', TCP_PORT))
 
     context.set_socket(server_socket)
 
     # start listening for incoming requests
     server_socket.listen()
-    log.info(f'started tcp server on local machine port {PORT}')
+    log.info(f'started tcp server on local machine port {TCP_PORT}')
 
     # continue monitoring requests until user quits application
     while True:
