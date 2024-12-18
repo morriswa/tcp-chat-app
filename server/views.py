@@ -2,7 +2,7 @@
 import daos
 
 
-def hello_world(request, authentication):
+def health():
     return {
         "msg": "hello world"
     }
@@ -22,7 +22,7 @@ def create_account(request):
     }
 
 
-def online_users(param, auth):
+def online_users():
     users = daos.get_online_users()
     return {
         "msg": "successfully retrieved online users",

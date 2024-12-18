@@ -1,14 +1,20 @@
 
+from psycopg2 import errors
+
 import database
 from exception import BadRequestException
 
 
 def create_account(username, password):
     with database.cursor() as cur:
-        cur.execute("""
-            INSERT INTO user_info (username, password)
-            VALUES (%(username)s, %(password)s)
-        """, {'username': username, 'password': password})
+        try:
+            cur.execute("""
+                INSERT INTO user_info (username, password)
+                VALUES (%(username)s, %(password)s)
+            """, {'username': username, 'password': password})
+        except errors.UniqueViolation as exc:
+            if 'user_info_pkey' in str(exc):
+                raise BadRequestException("There is already an account with that username")
 
 
 def login(username, provided_password):

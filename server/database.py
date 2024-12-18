@@ -60,7 +60,7 @@ class cursor:
             raise RuntimeError("database connection has not been initialized")
 
         if exc_type is not None:
-            log.error('encountered error while committing transaction', exc_info=exc_value)
+            log.error('encountered error while committing transaction, attempting rollback')
             conn.rollback()
             log.debug('transaction rollback complete')
             self.__cursor = None

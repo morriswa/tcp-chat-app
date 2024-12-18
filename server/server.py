@@ -6,7 +6,7 @@ import json
 import context
 import authentication
 import views
-from exception import BadRequestException, ServerException
+from exception import BadRequestException
 
 PORT = 5678
 
@@ -17,23 +17,28 @@ def process_request(request):
     try:
         match request.get("action"):
             case "health":
-                auth = authentication.authenticate(request)
-                return views.hello_world(request.get("body"), auth)
+                authentication.authenticate(request)
+                return views.health()
             case "create_account":
                 return views.create_account(request.get("body"))
+            case "online_users":
+                authentication.authenticate(request)
+                return views.online_users()
             case "retrieve_chats":
                 pass
             case "view_chat":
                 pass
             case "send_message":
                 pass
-            case "online_users":
-                auth = authentication.authenticate(request)
-                return views.online_users(request.get("body"), auth)
             case _:
                 raise BadRequestException("Invalid request action")
-    except ServerException as e:
+    except BadRequestException as e:
         return e.response()
+    except Exception as e:
+        log.error("Internal Server Error while processing request", exc_info=e)
+        return {
+            "msg": "Encountered unexpected server error, please contact your system administrator",
+        }
 
 
 def stop_tcp_server():

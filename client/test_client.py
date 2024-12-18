@@ -32,19 +32,19 @@ if __name__ == "__main__":
     decoded_credentials = f"{username}:{password}"
     encoded_credentials = base64.b64encode(decoded_credentials.encode())
 
-    request = {
-        "authentication": f"Basic {encoded_credentials.decode()}",
-        "action": "health",
-    }
-    request = {
-        "authentication": f"Basic {encoded_credentials.decode()}",
-        "action": "online_users",
-    }
     # request = {
-    #     "action": "create_account",
-    #     "body": {
-    #         "username": username,
-    #         "password": password
-    #     }
+    #     "authentication": f"Basic {encoded_credentials.decode()}",
+    #     "action": "health",
     # }
+    # request = {
+    #     "authentication": f"Basic {encoded_credentials.decode()}",
+    #     "action": "online_users",
+    # }
+    request = {
+        "action": "create_account",
+        "body": {
+            "username": username,
+            "password": password
+        }
+    }
     send_tcp_request(json.dumps(request))
