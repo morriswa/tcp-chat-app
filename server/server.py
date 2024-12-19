@@ -23,7 +23,6 @@ def process_request(request):
             case "create_account":
                 return views.create_account(request.get("body"))
             case "online_users":
-                authentication.authenticate(request)
                 return views.online_users()
             case "retrieve_chats":
                 pass

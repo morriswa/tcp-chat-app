@@ -14,7 +14,7 @@ def create_account(request):
     return {
         "status": "ok",
         "msg": "successfully created account",
-        "username": request["username"]
+        "body": request["username"]
     }
 
 
@@ -23,5 +23,5 @@ def online_users():
     return {
         "status": "ok",
         "msg": "successfully retrieved online users",
-        "users": users
+        "body": users
     }

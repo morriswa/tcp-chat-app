@@ -8,7 +8,7 @@ import os
 import context
 
 SERVER_IP = os.getenv('SERVER_HOST', '0.0.0.0')
-SERVER_PORT = os.getenv('SERVER_PORT', '5678')
+SERVER_PORT = int(os.getenv('SERVER_PORT', '5678'))
 
 log = logging.getLogger(__name__)
 
@@ -71,3 +71,18 @@ def create_account(username, password):
     else:
         log.error(response_data['msg'])
         return False, response_data['msg']
+
+
+def get_online_users():
+    request = {
+        "action": "online_users",
+    }
+    response = send_tcp_request(json.dumps(request))
+    response_data = json.loads(response)
+
+    if response_data["status"] == "ok":
+        # print(response_data["body"])
+        return response_data["body"]
+    else:
+        log.error(response_data['msg'])
+
