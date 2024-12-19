@@ -1,4 +1,7 @@
 
+""" contains core app tcp server functionality """
+
+
 import socket
 import logging
 import json
@@ -17,7 +20,10 @@ log = logging.getLogger(__name__)
 
 
 def process_request(request):
+    """ processes a TCP request """
     try:
+        # match tcp request action with appropriate view
+        # perform authentication on action-by-action basis
         match request.get("action"):
             case "health":
                 authentication.authenticate(request)
@@ -25,10 +31,11 @@ def process_request(request):
             case "create_account":
                 return views.create_account(request.get("body"))
             case "online_users":
-                return views.online_users()
+                auth = authentication.authenticate(request)
+                return views.online_users(auth)
             case "active_chats":
                 auth = authentication.authenticate(request)
-                return views.get_active_chats(request.get('body'), auth)
+                return views.get_active_chats(auth)
             case "view_chat":
                 auth = authentication.authenticate(request)
                 return views.get_chat_history(request.get('body'), auth)
@@ -47,10 +54,14 @@ def process_request(request):
 
 
 def stop_tcp_server():
+    """ safely shuts down the TCP server """
+
+    # retrieve socket from application context
     soc = context.get_socket()
     if soc is not None:
+        # close and reset, if available
         soc.close()
-    context.set_socket(None)
+        context.set_socket(None)
     log.debug("tcp server closed successfully")
 
 
@@ -66,6 +77,7 @@ def start_tcp_server():
 
     server_socket.bind(('0.0.0.0', TCP_PORT))
 
+    # save socket in application context
     context.set_socket(server_socket)
 
     # start listening for incoming requests
@@ -78,12 +90,16 @@ def start_tcp_server():
         client_socket, client_address = server_socket.accept()
         log.info(f'opened connection to {client_address[0]}:{client_address[1]}')
 
-        data = client_socket.recv(BUFFER)  # Adjust buffer size as needed
-
+        # retrieve data
+        data = client_socket.recv(BUFFER)
+        # decode data
         decoded_data = json.loads(data.decode("utf-8"))
+        # process tcp request data
         response_data = process_request(decoded_data)
-        response = json.dumps(response_data)
-
-        client_socket.sendall(response.encode())
+        # encode response data
+        response = json.dumps(response_data).encode()
+        # send response back to client
+        client_socket.sendall(response)
+        # close client connection
         client_socket.close()
         log.info(f'closed connection to {client_address[0]}:{client_address[1]}\n')

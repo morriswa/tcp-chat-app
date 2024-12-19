@@ -1,8 +1,11 @@
 
+""" contains functions that process verified tcp requests """
+
 import daos
 
 
 def health():
+    """ processes health request """
     return {
         "status": "ok",
         "msg": "hello world",
@@ -11,6 +14,7 @@ def health():
 
 
 def create_account(request):
+    """ processes create account request """
     daos.create_account(request["username"], request["password"])
     return {
         "status": "ok",
@@ -19,8 +23,12 @@ def create_account(request):
     }
 
 
-def online_users():
+def online_users(auth):
+    """ processes online users request """
+    # retrieve complete list of logged in users
     users = daos.get_online_users()
+    # do not include current user in list
+    users = [user for user in users if user != auth]
     return {
         "status": "ok",
         "msg": "successfully retrieved online users",
@@ -29,6 +37,7 @@ def online_users():
 
 
 def send_message(request, auth):
+    """ processes send message request """
     uname_to = request["username"]
     message = request["message"]
     daos.send_message(auth, uname_to, message)
@@ -40,6 +49,7 @@ def send_message(request, auth):
 
 
 def get_chat_history(request, auth):
+    """ processes get chat history request """
     uname_to = request["username"]
     chats = daos.get_chat_history(auth, uname_to)
     return {
@@ -49,7 +59,8 @@ def get_chat_history(request, auth):
     }
 
 
-def get_active_chats(request, auth):
+def get_active_chats(auth):
+    """ processes get active chats request """
     users = daos.get_active_chats(auth)
     return {
         "status": "ok",

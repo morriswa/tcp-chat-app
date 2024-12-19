@@ -1,4 +1,6 @@
 
+""" contains core app database functionality """
+
 import os
 import logging
 from typing import Any
@@ -12,6 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class init_db:
+    """ context manager for database connection """
     def __enter__(self):
         """ initializes application db context """
         conn = context.get_db_connection()
@@ -35,13 +38,14 @@ class init_db:
         context.set_db_connection(None)
 
         if exc_type is not None and not isinstance(exc_value, SystemExit):
+            # log unexpected errors
             log.debug('closed connection to db with errors')
         else:
             log.debug('closed connection to db')
 
 
 class cursor:
-
+    """ context manager for database transaction """
     def __init__(self):
         self.__cursor: Any = None
 
@@ -73,6 +77,7 @@ class cursor:
 
 
 def create_tables():
+    """ optionally creates required database tables"""
     with cursor() as cur:
         cur.execute("""
             create table if not exists user_info (

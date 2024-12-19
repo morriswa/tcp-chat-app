@@ -1,4 +1,6 @@
 
+""" Contains backend application state, and relevant get/setters """
+
 from typing import Any
 
 __socket: Any = None

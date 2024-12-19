@@ -1,4 +1,7 @@
 
+""" contains datamodels used through the application """
+
+
 class Chat:
     def __init__(self, **kwargs):
         self.uname_from = kwargs.get('uname_from')

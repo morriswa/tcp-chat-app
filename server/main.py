@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+__author__ = 'William Morris [morriswa]'
+
 import logging
 import signal
 
@@ -10,6 +12,7 @@ from server import start_tcp_server, stop_tcp_server
 
 
 def handle_interrupt(s, f):
+    """ safe cleanup function """
     logging.info(f"received {signal.Signals(s).name}, exiting...")
     try:
         # cleanup
