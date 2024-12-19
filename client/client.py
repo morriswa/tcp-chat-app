@@ -86,3 +86,54 @@ def get_online_users():
     else:
         log.error(response_data['msg'])
 
+
+def get_active_chats():
+    request = {
+        "action": "active_chats",
+        "authentication": context.get_token(),
+    }
+    response = send_tcp_request(json.dumps(request))
+    response_data = json.loads(response)
+
+    if response_data["status"] == "ok":
+        # print(response_data["body"])
+        return response_data["body"]
+    else:
+        log.error(response_data['msg'])
+
+
+def view_chat(username):
+    request = {
+        "action": "view_chat",
+        "authentication": context.get_token(),
+        "body": {
+            "username": username,
+        }
+    }
+    response = send_tcp_request(json.dumps(request))
+    response_data = json.loads(response)
+
+    if response_data["status"] == "ok":
+        # print(response_data["body"])
+        return response_data["body"]
+    else:
+        log.error(response_data['msg'])
+
+
+def send_message(recipient, message):
+    request = {
+        "action": "send_message",
+        "authentication": context.get_token(),
+        "body": {
+            "username": recipient,
+            "message": message,
+        }
+    }
+    response = send_tcp_request(json.dumps(request))
+    response_data = json.loads(response)
+
+    if response_data["status"] == "ok":
+        # print(response_data["body"])
+        return response_data["body"]
+    else:
+        log.error(response_data['msg'])
