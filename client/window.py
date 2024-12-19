@@ -35,7 +35,7 @@ def refresh_online_users(current_user):
         else:
             break
 
-    window.after(5000, refresh_online_users)
+    window.after(5000, lambda: refresh_online_users(current_user))
 
 
 def refresh_active_chats(current_user):
@@ -63,7 +63,7 @@ def refresh_active_chats(current_user):
         else:
             break
 
-    window.after(5000, refresh_online_users)
+    window.after(5000, lambda: refresh_active_chats(current_user))
 
 
 def show_main_page(username):
