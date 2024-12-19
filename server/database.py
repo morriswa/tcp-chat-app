@@ -81,10 +81,11 @@ def create_tables():
                 last_login timestamp not null default current_timestamp
             );
             
-            create table if not exists user_chat_logs (
-                chat_id bigint primary key,
-                user_one varchar(256) not null,
-                user_two varchar(256) not null,
-                chat_log varchar(100000)
+            create table if not exists user_chat_log (
+                chat_id bigserial primary key,
+                uname_from varchar(256) not null references user_info(username) on delete cascade,
+                uname_to varchar(256) not null references user_info(username) on delete cascade,
+                message varchar(1000),
+                sent timestamp not null default current_timestamp
             );
         """)

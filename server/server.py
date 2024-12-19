@@ -24,12 +24,15 @@ def process_request(request):
                 return views.create_account(request.get("body"))
             case "online_users":
                 return views.online_users()
-            case "retrieve_chats":
-                pass
+            case "active_chats":
+                auth = authentication.authenticate(request)
+                return views.get_active_chats(request.get('body'), auth)
             case "view_chat":
-                pass
+                auth = authentication.authenticate(request)
+                return views.get_chat_history(request.get('body'), auth)
             case "send_message":
-                pass
+                auth = authentication.authenticate(request)
+                return views.send_message(request.get('body'), auth)
             case _:
                 raise BadRequestException("Invalid request action")
     except BadRequestException as e:

@@ -27,7 +27,7 @@ def send_tcp_request(message: str):
 if __name__ == "__main__":
 
     username = "william"
-    password = "passphrase"
+    password = "password"
 
     decoded_credentials = f"{username}:{password}"
     encoded_credentials = base64.b64encode(decoded_credentials.encode())
@@ -40,11 +40,35 @@ if __name__ == "__main__":
     #     "authentication": f"Basic {encoded_credentials.decode()}",
     #     "action": "online_users",
     # }
+    # request = {
+    #     "action": "create_account",
+    #     "body": {
+    #         "username": username,
+    #         "password": password
+    #     }
+    # }
+    # request = {
+    #     "authentication": f"Basic {encoded_credentials.decode()}",
+    #     "action": "send_message",
+    #     "body": {
+    #         "username": "william",
+    #         "message": "hi hru"
+    #     }
+    # }
+    # request = {
+    #     "authentication": f"Basic {encoded_credentials.decode()}",
+    #     "action": "view_chat",
+    #     "body": {
+    #         "username": "kevin",
+    #         "message": "hi hru"
+    #     }
+    # }
     request = {
-        "action": "create_account",
+        "authentication": f"Basic {encoded_credentials.decode()}",
+        "action": "active_chats",
         "body": {
-            "username": username,
-            "password": password
+            "username": "kevin",
+            "message": "hi hru"
         }
     }
     send_tcp_request(json.dumps(request))
