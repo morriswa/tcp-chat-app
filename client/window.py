@@ -5,12 +5,15 @@ import tkinter as tk
 
 import context
 import client
-
+from exception import ServerException
 
 log = logging.getLogger(__name__)
 
 
 def refresh_online_users(current_user):
+    if context.get_frame('authenticated') is None:
+        return
+
     window = context.get_window()
     authenticated_frame = context.get_frame('authenticated')
 
@@ -39,6 +42,9 @@ def refresh_online_users(current_user):
 
 
 def refresh_active_chats(current_user):
+    if context.get_frame('authenticated') is None:
+        return
+
     window = context.get_window()
     authenticated_frame = context.get_frame('authenticated')
 
@@ -83,6 +89,8 @@ def show_main_page(username):
 
     def logout_action():
         context.delete_token()
+        authenticated_frame.destroy()
+        context.set_frame('authenticated', None)
         show_login_page()
 
     # Create logout button
@@ -141,11 +149,11 @@ def show_login_page():
         username = username_entry.get()
         password = password_entry.get()
 
-        created, error = client.create_account(username, password)
-        if created:
-            show_main_page(username)
-        else:
-            label = tk.Label(login_frame, text=error)
+        try:
+            if client.create_account(username, password):
+                show_main_page(username)
+        except ServerException as e:
+            label = tk.Label(login_frame, text=e.message)
             label.grid(row=0, column=0, columnspan=2)
 
         username_entry.delete(0, tk.END)
@@ -160,6 +168,9 @@ def show_login_page():
 
 
 def refresh_chat_page(username):
+    if context.get_frame(f'chat_{username}') is None:
+        return
+
     chat_content = client.view_chat(username)
 
     chat_frame = context.get_frame(f'chat_{username}')
@@ -189,9 +200,14 @@ def show_chat_page(host, remote):
     label = tk.Label(chat_frame, text=f"Chat with {remote}")
     label.grid(row=0, column=0, columnspan=3)
 
+    def exit_action():
+        chat_frame.destroy()
+        context.set_frame(f'chat_{remote}', None)
+        show_main_page(host)
+
     exit_button = tk.Button(chat_frame,
                             text="Exit",
-                            command=lambda: show_main_page(host))
+                            command=exit_action)
     exit_button.grid(row=0, column=3)
 
     message_label = tk.Label(chat_frame, text="Message:")
@@ -208,8 +224,8 @@ def show_chat_page(host, remote):
         # action
 
     send_button = tk.Button(chat_frame,
-                             text="Send!",
-                             command=send_chat_action)
+                            text="Send!",
+                            command=send_chat_action)
     send_button.grid(row=1, column=4)
 
     chat_frame.tkraise()
