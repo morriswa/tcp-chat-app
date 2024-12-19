@@ -7,6 +7,7 @@ import os
 
 import context
 
+BUFFER = 10_000_000
 SERVER_IP = os.getenv('SERVER_HOST', '0.0.0.0')
 SERVER_PORT = int(os.getenv('SERVER_PORT', '5678'))
 
@@ -21,7 +22,7 @@ def send_tcp_request(message: str):
 
     client_socket.sendall(message.encode())
 
-    response = client_socket.recv(1024)
+    response = client_socket.recv(BUFFER)
 
     # close client connection
     client_socket.close()

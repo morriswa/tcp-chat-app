@@ -9,6 +9,8 @@ import authentication
 import views
 from exception import BadRequestException
 
+BUFFER = 10_000_000
+
 TCP_PORT = int(os.getenv('TCP_PORT', 5678))
 
 log = logging.getLogger(__name__)
@@ -76,7 +78,7 @@ def start_tcp_server():
         client_socket, client_address = server_socket.accept()
         log.info(f'opened connection to {client_address[0]}:{client_address[1]}')
 
-        data = client_socket.recv(1024)  # Adjust buffer size as needed
+        data = client_socket.recv(BUFFER)  # Adjust buffer size as needed
 
         decoded_data = json.loads(data.decode("utf-8"))
         response_data = process_request(decoded_data)

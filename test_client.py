@@ -47,28 +47,23 @@ if __name__ == "__main__":
     #         "password": password
     #     }
     # }
-    # request = {
-    #     "authentication": f"Basic {encoded_credentials.decode()}",
-    #     "action": "send_message",
-    #     "body": {
-    #         "username": "william",
-    #         "message": "hi hru"
-    #     }
-    # }
+    request = {
+        "authentication": f"Basic {encoded_credentials.decode()}",
+        "action": "send_message",
+        "body": {
+            "username": "kevin",
+            "message": "i love you"
+        }
+    }
     # request = {
     #     "authentication": f"Basic {encoded_credentials.decode()}",
     #     "action": "view_chat",
     #     "body": {
     #         "username": "kevin",
-    #         "message": "hi hru"
     #     }
     # }
-    request = {
-        "authentication": f"Basic {encoded_credentials.decode()}",
-        "action": "active_chats",
-        "body": {
-            "username": "kevin",
-            "message": "hi hru"
-        }
-    }
+    # request = {
+    #     "authentication": f"Basic {encoded_credentials.decode()}",
+    #     "action": "active_chats",
+    # }
     send_tcp_request(json.dumps(request))
