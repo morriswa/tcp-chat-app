@@ -10,13 +10,15 @@ from exception import ServerException
 log = logging.getLogger(__name__)
 
 
-def refresh_online_users(current_user):
-    if context.get_frame('authenticated') is None:
-        return
+def poll_online_users(current_user):
 
-    window = context.get_window()
     authenticated_frame = context.get_frame('authenticated')
 
+    if authenticated_frame is None:
+        # if frame no longer exists in global context, stop polling
+        return
+
+    # retrieve list of online users from server
     users = client.get_online_users()
 
     labels = []
@@ -24,7 +26,7 @@ def refresh_online_users(current_user):
         lbl.destroy()
         button.destroy()
 
-    for idx, user in enumerate(users):
+    for idx, user in enumerate(users[:10]):
         if idx <= 10:
             lbl = tk.Label(authenticated_frame, text=user)
             lbl.grid(row=3 + idx, column=0, columnspan=2)
@@ -38,15 +40,16 @@ def refresh_online_users(current_user):
         else:
             break
 
-    window.after(5000, lambda: refresh_online_users(current_user))
+    # poll every 5 seconds
+    context.get_window().after(5000, lambda: poll_online_users(current_user))
 
 
-def refresh_active_chats(current_user):
-    if context.get_frame('authenticated') is None:
-        return
+def poll_active_chats(current_user):
 
-    window = context.get_window()
     authenticated_frame = context.get_frame('authenticated')
+    if authenticated_frame is None:
+        # if frame no longer exists in global context, stop polling
+        return
 
     users = client.get_active_chats()
 
@@ -69,15 +72,43 @@ def refresh_active_chats(current_user):
         else:
             break
 
-    window.after(5000, lambda: refresh_active_chats(current_user))
+    # poll every 5 seconds
+    context.get_window().after(5000, lambda: poll_active_chats(current_user))
+
+
+def refresh_chat_page(username):
+    chat_frame = context.get_frame(f'chat_{username}')
+    if chat_frame is None:
+        # if frame no longer exists in global context, stop polling
+        return
+
+    chat_content = client.view_chat(username)
+
+    # display all chat content on screen
+    buff = 2
+    for idx, chat_entry in enumerate(chat_content):
+        label = tk.Label(chat_frame, text=chat_entry['uname_from'])
+        label.grid(row=buff + 1 + 3 * idx, column=0, columnspan=3)
+
+        label = tk.Label(chat_frame, text=chat_entry['message'])
+        label.grid(row=buff + 2 + 3 * idx, column=0, columnspan=3)
+
+        label = tk.Label(chat_frame, text=' ')
+        label.grid(row=buff + 3 + 3 * idx, column=0, columnspan=3)
+
+    # poll every second
+    context.get_window().after(1000, lambda: refresh_chat_page(username))
 
 
 def show_main_page(username):
     window = context.get_window()
 
+    # init frame
     authenticated_frame = tk.Frame(window)
     authenticated_frame.grid(row=0, column=0, sticky="nsew")
+    context.set_frame('authenticated', authenticated_frame)
 
+    # init page text
     label = tk.Label(authenticated_frame, text=f"Hello {username}!")
     label.grid(row=0, column=0, columnspan=3)
 
@@ -87,33 +118,40 @@ def show_main_page(username):
     label = tk.Label(authenticated_frame, text="Active Chats")
     label.grid(row=2, column=5, columnspan=4)
 
+    # Create logout button
     def logout_action():
         context.delete_token()
         authenticated_frame.destroy()
         context.set_frame('authenticated', None)
         show_login_page()
 
-    # Create logout button
     logout = tk.Button(authenticated_frame,
                        text="Logout",
                        command=logout_action)
     logout.grid(row=0, column=4, columnspan=2)
 
+    # display frame
     authenticated_frame.tkraise()
-    context.set_frame('authenticated', authenticated_frame)
 
-    refresh_online_users(username)
-    refresh_active_chats(username)
+    # begin polling server
+    poll_online_users(username)
+    poll_active_chats(username)
 
 
 def show_login_page():
+    # retrieve window from global context
     window = context.get_window()
-
+    # initialize login frame
     login_frame = tk.Frame(window)
-    context.set_frame('login', login_frame)
     login_frame.grid(row=0, column=0, sticky="nsew")
+    # save in global context
+    context.set_frame('login', login_frame)
 
-    # Create labels and entry widgets
+    # init error tracking
+    current_error_label = tk.Label(login_frame, text="")
+    current_error_label.grid(row=0, column=0, columnspan=3)
+
+    # create login form
     username_label = tk.Label(login_frame, text="Username:")
     username_label.grid(row=1, column=0)
     username_entry = tk.Entry(login_frame)
@@ -132,12 +170,14 @@ def show_login_page():
         log.info(f"Attempting login with {username}:{password}")
 
         if client.verify_credentials(username, password):
-            show_main_page(username)
             username_entry.delete(0, tk.END)
             password_entry.delete(0, tk.END)
+            login_frame.destroy()
+            context.set_frame('login', None)
+            show_main_page(username)
         else:
-            label = tk.Label(login_frame, text="Bad login!")
-            label.grid(row=0, column=0, columnspan=2)
+            # error output
+            current_error_label.configure(text="Bad Username/Password")
 
     login_button = tk.Button(login_frame,
                              text="Login",
@@ -151,86 +191,73 @@ def show_login_page():
 
         try:
             if client.create_account(username, password):
+                username_entry.delete(0, tk.END)
+                password_entry.delete(0, tk.END)
+                login_frame.destroy()
+                context.set_frame('login', None)
                 show_main_page(username)
         except ServerException as e:
-            label = tk.Label(login_frame, text=e.message)
-            label.grid(row=0, column=0, columnspan=2)
-
-        username_entry.delete(0, tk.END)
-        password_entry.delete(0, tk.END)
+            # error output
+            current_error_label.configure(text=e.message)
 
     create_account_button = tk.Button(login_frame,
                                       text="Create Account",
                                       command=create_account_action)
     create_account_button.grid(row=4, column=0, columnspan=2)
 
+    # display login frame on screen
     login_frame.tkraise()
 
 
-def refresh_chat_page(username):
-    if context.get_frame(f'chat_{username}') is None:
-        return
-
-    chat_content = client.view_chat(username)
-
-    chat_frame = context.get_frame(f'chat_{username}')
-
-    buff = 2
-
-    for idx, chat_entry in enumerate(chat_content):
-        label = tk.Label(chat_frame, text=chat_entry['uname_from'])
-        label.grid(row=buff + 1 + 3 * idx, column=0, columnspan=3)
-
-        label = tk.Label(chat_frame, text=chat_entry['message'])
-        label.grid(row=buff + 2 + 3 * idx, column=0, columnspan=3)
-
-        label = tk.Label(chat_frame, text=' ')
-        label.grid(row=buff + 3 + 3 * idx, column=0, columnspan=3)
-
-    context.get_window().after(1000, lambda: refresh_chat_page(username))
-
-
-def show_chat_page(host, remote):
+def show_chat_page(host_username, target_username):
     window = context.get_window()
 
+    # init chat window frame
     chat_frame = tk.Frame(window)
-    context.set_frame(f'chat_{remote}', chat_frame)
+    context.set_frame(f'chat_{target_username}', chat_frame)
     chat_frame.grid(row=0, column=0, sticky="nsew")
 
-    label = tk.Label(chat_frame, text=f"Chat with {remote}")
+    label = tk.Label(chat_frame, text=f"Chat with {target_username}")
     label.grid(row=0, column=0, columnspan=3)
 
+    # message field
+    message_label = tk.Label(chat_frame, text="Message:")
+    message_label.grid(row=1, column=0)
+    message_entry = tk.Entry(message_label)
+    message_entry.grid(row=1, column=1, columnspan=3)
+
+    # exit button
     def exit_action():
+        # on exit chat window, destroy chat frame
         chat_frame.destroy()
-        context.set_frame(f'chat_{remote}', None)
-        show_main_page(host)
+        context.set_frame(f'chat_{target_username}', None)
+        # open main page
+        show_main_page(host_username)
 
     exit_button = tk.Button(chat_frame,
                             text="Exit",
                             command=exit_action)
     exit_button.grid(row=0, column=3)
 
-    message_label = tk.Label(chat_frame, text="Message:")
-    message_label.grid(row=1, column=0)
-    message_entry = tk.Entry(message_label)
-    message_entry.grid(row=1, column=1, columnspan=3)
-
-    # Create login button
+    # send chat button
     def send_chat_action():
+        # on send, retrieve message
         message = message_entry.get()
-        client.send_message(remote, message)
+        # send
+        client.send_message(target_username, message)
+        # and clear message field
         message_entry.delete(0, tk.END)
-
-        # action
 
     send_button = tk.Button(chat_frame,
                             text="Send!",
                             command=send_chat_action)
     send_button.grid(row=1, column=4)
 
+    # display chat window page
     chat_frame.tkraise()
 
-    refresh_chat_page(remote)
+    # begin pulling
+    refresh_chat_page(target_username)
 
 
 def initialize():
@@ -238,10 +265,9 @@ def initialize():
     window = tk.Tk()
     # save in global context
     context.set_window(window)
-
-    # title window
+    # set window title
     window.title("TCP Chat Client")
-
+    # display login page (entry)
     show_login_page()
-
+    # start tkinter application
     window.mainloop()
