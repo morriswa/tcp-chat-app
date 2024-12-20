@@ -17,7 +17,7 @@
 logged in as database admin user and enter the following statements...
 
       CREATE ROLE tcp_chat_app_role with login password 'password';
-      CREATE DATABASE tcp_chat_role;
+      CREATE DATABASE tcp_chat_app;
       GRANT CREATE ON DATABASE tcp_chat_app TO tcp_chat_app_role;
       \c tcp_chat_app;
       GRANT CREATE ON SCHEMA public TO tcp_chat_app_role;
